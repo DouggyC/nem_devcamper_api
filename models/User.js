@@ -37,26 +37,23 @@ const UserSchema = new mongoose.Schema({
 });
 
 // Encrypt password
-UserSchema.pre("save", async (next) => {
-  if (!this.isModified("password")) {
-    next();
-  }
+UserSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) next();
 
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });
 
 // Sign JWT and return
-UserSchema.methods.getSignJwtToken = function () {
-  return jwt.sign(
-    { id: this._id }, 
-    process.env.JWT_SECRET, 
-    { expiresIn: process.env.JWT_EXPIRE}
-  );
+UserSchema.methods.getSignedJwtToken = function () {
+  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRE,
+  });
 };
 
 // Match user entered password to hashed pw in db
 UserSchema.methods.matchPassword = async function (enteredPassword) {
+  console.log("enteredPassword", enteredPassword === this.password);
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
